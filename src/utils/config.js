@@ -1,6 +1,6 @@
 const config = {
     ENEMY_FREQ: 1500,
-    SPEED: 40,
+    SPEED: 60,
     STAR_NUMBER: 250,
     CANVAS_WIDTH: 1360,
     CANVAS_HEIGHT: 768,

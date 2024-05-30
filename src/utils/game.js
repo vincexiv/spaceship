@@ -74,13 +74,13 @@ function paintSpaceship(canvas, x, y){
 function getGame(canvas){
     const stars = getStarStream()
     const spaceship = getSpaceship(canvas)
-    const enemies = getEnemies(canvas)
+    const enemies = getEnemies()
     return Rx.Observable.combineLatest(
         stars, spaceship, enemies,
         function(stars, spaceship, enemies){
             return { stars, spaceship, enemies }
         }
-    )
+    ).sample(get('SPEED'))
 }
 
 function renderScene(canvas, actors) {
@@ -91,7 +91,7 @@ function renderScene(canvas, actors) {
     })
 }
 
-function getEnemies(canvas){
+function getEnemies(){
     const enemies = Rx.Observable.interval(get('ENEMY_FREQ'))
         .scan((enemyArray, i)=> {
             const enemy = {
