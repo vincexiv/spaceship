@@ -1,22 +1,23 @@
 import "./App.css"
 import React, { useRef, useEffect } from "react";
-import { getGame, renderScene } from "./utils/methods";
+import { getGame, renderScene } from "./utils/game";
+import get from "./utils/config";
 
 function App(){
   const cRef = useRef()
 
   useEffect(() => {
       const canvas = cRef?.current
-      canvas.width = 1366
-      canvas.height = 768
-      canvas.style.width = '100%'
-      canvas.style.height = '100%'
+      canvas.width = get('CANVAS_WIDTH')
+      canvas.height = get('CANVAS_HEIGHT')
       const game = getGame(canvas)
       game.subscribe((actors)=>renderScene(canvas, actors))
   }, [])
 
   return (
-    <canvas ref={cRef}></canvas>
+    <div id="game-container">
+      <canvas ref={cRef}></canvas>
+    </div>
   )
 }
 
