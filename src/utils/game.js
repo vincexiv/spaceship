@@ -100,9 +100,20 @@ function getEnemies(){
         .scan((enemyArray, i)=> {
             const enemy = {
                 x: parseInt(Math.random() * get('CANVAS_WIDTH')),
-                y: -30
+                y: -30,
+                shots: []
             }
+
+            Rx.Observable.interval(get('ENEMY_SHOOTING_FREQ')).subscribe(function(){
+                enemy.shots.push({
+                    x: enemy.x,
+                    y: enemy.y
+                })
+                enemy.shots = enemy.shots.filter(isVisible)
+            })
+
             enemyArray.push(enemy)
+
             return enemyArray
         }, [])
 
@@ -117,8 +128,12 @@ function paintEnemies(canvas, enemies){
     enemies.forEach(function(enemy){
         enemy.y += get('ENEMY_MOVEMENT_SPEED'),
         enemy.x += getRandomInt(-15, 15)
-
         drawTriangle(canvas, enemy.x, enemy.y, 20, '#00ff00', 'down')
+
+        enemy.shots.forEach(shot => {
+            shot.y += get('SHOOTING_SPEED')
+            drawTriangle(canvas, shot.x, shot.y, 5, '#00ffff', 'down')
+        })
     })
 }
 
@@ -156,6 +171,11 @@ function paintHeroShots(canvas, heroShots) {
         shot.y -= get('SHOOTING_SPEED');
         drawTriangle(canvas, shot.x, shot.y, 5, '#ffff00', 'up');
     });
+}
+
+function isVisible(obj) {
+    return obj.x > -40 && obj.x < canvas.width + 40 &&
+    obj.y > -40 && obj.y < canvas.height + 40;
 }
 
 export { getGame, renderScene }

@@ -8,7 +8,8 @@ const config = {
     STAR_MOVEMENT_SPEED: 3,
     ENEMY_MOVEMENT_SPEED: 5,
     SHOOTING_SPEED: 40,
-    FIRING_SPEED: 200
+    FIRING_SPEED: 200,
+    ENEMY_SHOOTING_FREQ: 750
 }
 
 function get(name){
