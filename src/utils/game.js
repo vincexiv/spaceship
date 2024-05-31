@@ -77,14 +77,18 @@ function paintBackground(canvas){
 function getGame(canvas){
     const stars = getStarStream()
     const spaceship = getSpaceship(canvas)
-    const enemies = getEnemies()
+    const enemies = getEnemies(canvas)
     const shots = getHeroShots(spaceship, getPlayerFiring(canvas))
     return Rx.Observable.combineLatest(
         stars, spaceship, enemies, shots,
         function(stars, spaceship, enemies, shots ){
             return { stars, spaceship, enemies, shots }
         }
-    ).sample(get('SPEED'))
+    )
+    .sample(get('SPEED'))
+    .takeWhile(function(actors){
+        return gameOver(actors.spaceship, actors.enemies) === false
+    })
 }
 
 function renderScene(canvas, actors) {
@@ -95,7 +99,7 @@ function renderScene(canvas, actors) {
     requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots, actors.enemies))
 }
 
-function getEnemies(){
+function getEnemies(canvas){
     const enemies = Rx.Observable.interval(get('ENEMY_FREQ'))
         .scan((enemyArray, i)=> {
             const enemy = {
@@ -111,7 +115,9 @@ function getEnemies(){
                         y: enemy.y
                     })
                 }
-                enemy.shots = enemy.shots.filter(isVisible)
+                enemy.shots = enemy.shots.filter(function(shot){
+                    return isVisible(canvas, shot)
+                })
             })
 
             enemyArray.push(enemy)
@@ -186,7 +192,7 @@ function paintHeroShots(canvas, heroShots, enemies) {
     });
 }
 
-function isVisible(obj) {
+function isVisible(canvas, obj) {
     return obj.x > -40 && obj.x < canvas.width + 40 &&
     obj.y > -40 && obj.y < canvas.height + 40;
 }
@@ -194,6 +200,17 @@ function isVisible(obj) {
 function collision(target1, target2) {
     return (target1.x > target2.x - 20 && target1.x < target2.x + 20) &&
     (target1.y > target2.y - 20 && target1.y < target2.y + 20);
+}
+
+function gameOver(ship, enemies) {
+    return enemies.some(function(enemy) {
+        if (collision(ship, enemy)) {
+            return true;
+        }
+        return enemy.shots.some(function(shot) {
+            return collision(ship, shot);
+        });
+    });
 }
 
 export { getGame, renderScene }
