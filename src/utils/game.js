@@ -27,13 +27,8 @@ function getStarStream(){
     })
 }
 
-function paintStars(canvas, stars) {
-    const ctx =  canvas?.getContext('2d')
-
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, get('CANVAS_WIDTH'), get('CANVAS_HEIGHT'));
-    ctx.fillStyle = '#ffffff';
-    
+function paintStars(canvas, stars) { 
+    const ctx = canvas.getContext('2d')   
     stars.forEach(function(star) {
             ctx.fillRect(star.x, star.y, star.size, star.size);
         });
@@ -71,24 +66,33 @@ function paintSpaceship(canvas, x, y){
     drawTriangle(canvas, x, y, 20, '#ff0000', 'up')
 }
 
+function paintBackground(canvas){
+    const ctx =  canvas?.getContext('2d')
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, get('CANVAS_WIDTH'), get('CANVAS_HEIGHT'));
+    ctx.fillStyle = '#ffffff';
+}
+
 function getGame(canvas){
     const stars = getStarStream()
     const spaceship = getSpaceship(canvas)
     const enemies = getEnemies()
+    const shots = getHeroShots(spaceship, getPlayerFiring(canvas))
     return Rx.Observable.combineLatest(
-        stars, spaceship, enemies,
-        function(stars, spaceship, enemies){
-            return { stars, spaceship, enemies }
+        stars, spaceship, enemies, shots,
+        function(stars, spaceship, enemies, shots ){
+            return { stars, spaceship, enemies, shots }
         }
     ).sample(get('SPEED'))
 }
 
 function renderScene(canvas, actors) {
-    requestAnimationFrame(() => {
-        paintStars(canvas, actors.stars);
-        paintSpaceship(canvas, actors.spaceship.x, actors.spaceship.y);
-        paintEnemies(canvas, actors.enemies)
-    })
+    requestAnimationFrame(()=>paintBackground(canvas))
+    requestAnimationFrame(()=>paintStars(canvas, actors.stars))
+    requestAnimationFrame(()=>paintSpaceship(canvas, actors.spaceship.x, actors.spaceship.y))
+    requestAnimationFrame(()=>paintEnemies(canvas, actors.enemies))
+    requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots))
 }
 
 function getEnemies(){
@@ -116,6 +120,42 @@ function paintEnemies(canvas, enemies){
 
         drawTriangle(canvas, enemy.x, enemy.y, 20, '#00ff00', 'down')
     })
+}
+
+function getPlayerFiring(canvas){    
+    const firing = Rx.Observable
+        .fromEvent(canvas, 'click')
+        .sample(get('FIRING_SPEED')).timestamp()
+        .startWith({clientX: 0, clientY: -1})
+
+    return firing
+}
+
+function getHeroShots(spaceship, shot){
+    return Rx.Observable.combineLatest(
+        spaceship, shot,
+        function(spaceship, shot){
+            return {
+                timestamp: shot.timestamp,
+                x: spaceship.x 
+            }
+        }
+    ).distinctUntilChanged(shotEvent => {
+        return shotEvent.timestamp;
+    }).scan((shotArray, shot) => {
+        shotArray.push({
+            x: shot.x,
+            y: get('HERO_Y')
+        })
+        return shotArray
+    }, [])
+}
+
+function paintHeroShots(canvas, heroShots) {
+    (heroShots || []).forEach(function(shot) {
+        shot.y -= get('SHOOTING_SPEED');
+        drawTriangle(canvas, shot.x, shot.y, 5, '#ffff00', 'up');
+    });
 }
 
 export { getGame, renderScene }
