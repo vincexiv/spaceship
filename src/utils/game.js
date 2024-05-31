@@ -92,7 +92,7 @@ function renderScene(canvas, actors) {
     requestAnimationFrame(()=>paintStars(canvas, actors.stars))
     requestAnimationFrame(()=>paintSpaceship(canvas, actors.spaceship.x, actors.spaceship.y))
     requestAnimationFrame(()=>paintEnemies(canvas, actors.enemies))
-    requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots))
+    requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots, actors.enemies))
 }
 
 function getEnemies(){
@@ -105,10 +105,12 @@ function getEnemies(){
             }
 
             Rx.Observable.interval(get('ENEMY_SHOOTING_FREQ')).subscribe(function(){
-                enemy.shots.push({
-                    x: enemy.x,
-                    y: enemy.y
-                })
+                if(!enemy.isDead){
+                    enemy.shots.push({
+                        x: enemy.x,
+                        y: enemy.y
+                    })
+                }
                 enemy.shots = enemy.shots.filter(isVisible)
             })
 
@@ -126,9 +128,11 @@ function getRandomInt(min, max) {
 
 function paintEnemies(canvas, enemies){
     enemies.forEach(function(enemy){
-        enemy.y += get('ENEMY_MOVEMENT_SPEED'),
-        enemy.x += getRandomInt(-15, 15)
-        drawTriangle(canvas, enemy.x, enemy.y, 20, '#00ff00', 'down')
+        if(!enemy.isDead){
+            enemy.y += get('ENEMY_MOVEMENT_SPEED'),
+            enemy.x += getRandomInt(-15, 15)
+            drawTriangle(canvas, enemy.x, enemy.y, 20, '#00ff00', 'down')
+        }
 
         enemy.shots.forEach(shot => {
             shot.y += get('SHOOTING_SPEED')
@@ -166,8 +170,17 @@ function getHeroShots(spaceship, shot){
     }, [])
 }
 
-function paintHeroShots(canvas, heroShots) {
+function paintHeroShots(canvas, heroShots, enemies) {
     (heroShots || []).forEach(function(shot) {
+        for(let i = 0; i < enemies.length; i++){
+            const enemy = enemies[i]
+            if(!enemy.isDead && collision(shot, enemy)){
+                enemy.isDead = true,
+                shot.y = -100
+                break
+            }
+        }
+
         shot.y -= get('SHOOTING_SPEED');
         drawTriangle(canvas, shot.x, shot.y, 5, '#ffff00', 'up');
     });
@@ -176,6 +189,11 @@ function paintHeroShots(canvas, heroShots) {
 function isVisible(obj) {
     return obj.x > -40 && obj.x < canvas.width + 40 &&
     obj.y > -40 && obj.y < canvas.height + 40;
+}
+
+function collision(target1, target2) {
+    return (target1.x > target2.x - 20 && target1.x < target2.x + 20) &&
+    (target1.y > target2.y - 20 && target1.y < target2.y + 20);
 }
 
 export { getGame, renderScene }
