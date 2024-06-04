@@ -9,7 +9,8 @@ const config = {
     ENEMY_MOVEMENT_SPEED: 5,
     SHOOTING_SPEED: 40,
     FIRING_SPEED: 100,
-    ENEMY_SHOOTING_FREQ: 3000
+    ENEMY_SHOOTING_FREQ: 3000,
+    SCORE_INCREASE: 10
 }
 
 function get(name){

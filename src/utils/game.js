@@ -74,21 +74,36 @@ function paintBackground(canvas){
     ctx.fillStyle = '#ffffff';
 }
 
-function getGame(canvas){
+function getScore(){
+    const scoreSubject = new Rx.Subject()
+    scoreSubject.scan((prev, curr)=> {
+        return prev + curr
+    }, 0).concat(Rx.Observable.return(0))
+
+    return scoreSubject
+}
+
+function getGame(canvas, setGameOver){
+    const score = getScore()
     const stars = getStarStream()
     const spaceship = getSpaceship(canvas)
     const enemies = getEnemies(canvas)
     const shots = getHeroShots(spaceship, getPlayerFiring(canvas))
-    return Rx.Observable.combineLatest(
+
+    const game = Rx.Observable.combineLatest(
         stars, spaceship, enemies, shots,
         function(stars, spaceship, enemies, shots ){
-            return { stars, spaceship, enemies, shots }
+            return { stars, spaceship, enemies, shots, score }
         }
     )
     .sample(get('SPEED'))
     .takeWhile(function(actors){
-        return gameOver(actors.spaceship, actors.enemies) === false
+        const go = gameOver(actors.spaceship, actors.enemies) === false
+        setGameOver(go)
+        return go
     })
+
+    return { game, score }
 }
 
 function renderScene(canvas, actors) {
@@ -96,7 +111,8 @@ function renderScene(canvas, actors) {
     requestAnimationFrame(()=>paintStars(canvas, actors.stars))
     requestAnimationFrame(()=>paintSpaceship(canvas, actors.spaceship.x, actors.spaceship.y))
     requestAnimationFrame(()=>paintEnemies(canvas, actors.enemies))
-    requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots, actors.enemies))
+    requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots, actors.enemies, actors.score))
+    requestAnimationFrame(()=>paintScore(canvas, actors.score))
 }
 
 function getEnemies(canvas){
@@ -176,11 +192,12 @@ function getHeroShots(spaceship, shot){
     }, [])
 }
 
-function paintHeroShots(canvas, heroShots, enemies) {
+function paintHeroShots(canvas, heroShots, enemies, score) {
     (heroShots || []).forEach(function(shot) {
         for(let i = 0; i < enemies.length; i++){
             const enemy = enemies[i]
             if(!enemy.isDead && collision(shot, enemy)){
+                score.onNext(get('SCORE_INCREASE'))
                 enemy.isDead = true,
                 shot.y = -100
                 break
@@ -204,13 +221,19 @@ function collision(target1, target2) {
 
 function gameOver(ship, enemies) {
     return enemies.some(function(enemy) {
-        if (collision(ship, enemy)) {
-            return true;
-        }
+        if(enemy.isDead){ return false }
+        if (collision(ship, enemy)) { return true; }
         return enemy.shots.some(function(shot) {
             return collision(ship, shot);
         });
     });
+}
+
+function paintScore(canvas, score) {
+    const ctx = canvas?.getContext('2d')
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillText('Score: ' + score, 40, 43);
 }
 
 export { getGame, renderScene }
