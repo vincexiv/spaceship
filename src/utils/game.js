@@ -99,7 +99,7 @@ function getGame(canvas, setGameOver){
     .sample(get('SPEED'))
     .takeWhile(function(actors){
         const go = gameOver(actors.spaceship, actors.enemies) === false
-        setGameOver(go)
+        setGameOver(!go)
         return go
     })
 
@@ -221,7 +221,6 @@ function collision(target1, target2) {
 
 function gameOver(ship, enemies) {
     return enemies.some(function(enemy) {
-        if(enemy.isDead){ return false }
         if (collision(ship, enemy)) { return true; }
         return enemy.shots.some(function(shot) {
             return collision(ship, shot);

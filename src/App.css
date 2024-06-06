@@ -8,6 +8,7 @@
   overflow: hidden;
   padding: 0;
   border: none;
+  background-color: black;
 }
 
 #game-container .score {
