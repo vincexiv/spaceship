@@ -4,10 +4,14 @@ import { getGame, renderScene } from "./utils/game";
 import get from "./utils/config";
 import { useState } from "react";
 
+const defaultRecordState = { gamesPlayed: 0, recordScore: 0 }
+const defaultGameState = { started: false, completed: false, score: 0 }
+
 function App(){
   const cRef = useRef()
-  const [ record, setRecord ] = useState([{gamesPlayed: 0, recordScore: 0}])  
-  const [ game, setGame ] = useState({started: false, completed: false, score: 0 })
+  const savedRecord = getFromLocalStorage('record')
+  const [ record, setRecord ] = useState(savedRecord || defaultRecordState)  
+  const [ game, setGame ] = useState(defaultGameState)
 
   useEffect(() => {
     if(!game.started){
@@ -15,14 +19,12 @@ function App(){
       canvas.width = get('CANVAS_WIDTH')
       canvas.height = get('CANVAS_HEIGHT')
   
-      const { game, score } = getGame(canvas, updateGameState)
+      const { game: gameObserver, score: scoreObserver } = getGame(canvas, updateGameState)
   
-      game.subscribe((actors)=>renderScene(canvas, actors))
-  
-      score.subscribe(s => {
-        setGame(g => ({...g, score: g.score + s}))
-      })
-  
+      gameObserver.subscribe((actors)=>renderScene(canvas, actors))
+      scoreObserver.subscribe(s => setGame(g => ({...g, score: g.score + s})))
+
+      setTimeout(()=> saveToLocalStorage('record', record), 0)
       setGameStarted()
     }
 
@@ -50,11 +52,24 @@ function App(){
   }
 
   function startNewGame(){
-    setGame({started: false, completed: false, score: 0 })
+    setGame(defaultGameState)
     setRecord(g => ({
       gamesPlayed: ++g.gamesPlayed,
       recordScore: getRecordScore()
     }))
+  }
+
+  function saveToLocalStorage(itemName, item){
+    localStorage.setItem(itemName, btoa(JSON.stringify(item)))
+  }
+
+  function getFromLocalStorage(itemName){
+    const item = localStorage.getItem(itemName)
+    if(item){
+      return JSON.parse(atob(item))
+    } else {
+      return null
+    }
   }
 
   return (
