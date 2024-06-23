@@ -94,7 +94,7 @@ function getResize(canvas){
         .startWith(null)
 }
 
-function getGame(canvas, setGameOver){
+function getGame(canvas, updateGameState){
     const score = getScore()
     const stars = getStarStream()
     const spaceship = getSpaceship(canvas)
@@ -110,9 +110,9 @@ function getGame(canvas, setGameOver){
     )
     .sample(get('SPEED'))
     .takeWhile(function(actors){
-        const go = gameOver(actors.spaceship, actors.enemies) === false
-        setGameOver(!go)
-        return go
+        const gameCompleted = gameOver(actors.spaceship, actors.enemies) !== false
+        updateGameState({completed: gameCompleted})
+        return !gameCompleted
     })
 
     return { game, score }

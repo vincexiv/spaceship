@@ -6,43 +6,69 @@ import { useState } from "react";
 
 function App(){
   const cRef = useRef()
-  const sRef = useRef()
-  const sc = useRef(0)
-  const loaded = useRef(false)
-  const [gameOver, setGameOver] = useState(false)
-  const [gameState, setGameState] = useState(false)
+  const [ record, setRecord ] = useState([{gamesPlayed: 0, recordScore: 0}])  
+  const [ game, setGame ] = useState({started: false, completed: false, score: 0 })
 
   useEffect(() => {
+    setGameStarted()
+
     const canvas = cRef?.current
     canvas.width = get('CANVAS_WIDTH')
     canvas.height = get('CANVAS_HEIGHT')
 
-    const { game, score } = getGame(canvas, setGameOver)
-    game.subscribe((actors)=>renderScene(canvas, actors))
-    score.subscribe(s => {
-      sc.current += s
-    })
-    loaded.current = true
-  }, [gameState])
+    const { game, score } = getGame(canvas, updateGameState)
 
-  function updateGameState(){
-    sc.current = 0
-    setGameState(!gameState)
+    game.subscribe((actors)=>renderScene(canvas, actors))
+
+    score.subscribe(s => {
+      setGame(g => ({...g, score: g.score + s}))
+    })
+
+  }, [record])
+
+  function setGameStarted(){
+    setGame(g => ({...g, started: true}))
+  }
+
+  function updateGameState(gameState){
+    if(gameState.completed){
+      setGame(g => ({
+        ...g,
+        completed: gameState.completed
+      }))
+    }
+  }
+
+  function getRecordScore(){
+    if(record.recordScore >= game.score){
+      return record.recordScore
+    } else {
+      return game.score
+    }
+  }
+
+  function startNewGame(){
+    setGame({started: false, completed: false, score: 0 })
+    setRecord(g => ({
+      gamesPlayed: ++g.gamesPlayed,
+      recordScore: getRecordScore()
+    }))
   }
 
   return (
     <div id="game-container">
       {
-        gameOver && loaded.current ?
+        game.started && game.completed ?
           <div className='game-over'>
             <h1 className="title">Game Over</h1>
-            <p>Your score: {sc.current}</p>
-            <button onClick={updateGameState}>Restart</button>
+            <p><b>Your current score:</b> {game.score}</p>
+            <p><b>Best Best score:</b> {getRecordScore()}</p>
+            <button onClick={startNewGame}>Restart</button>
           </div>
         : 
           <div className="score" >
             <p className="title">score</p>
-            <div ref={sRef}>{sc.current}</div>
+            <div>{game.score}</div>
           </div>
       }
       <canvas ref={cRef}></canvas>
