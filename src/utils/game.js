@@ -34,18 +34,23 @@ function paintStars(canvas, stars) {
         });
 }
 
+function getCanvasHeight(){
+    const { height } = document.querySelector('#game-container').getBoundingClientRect()
+    return height || 0
+}
+
 function getSpaceship(canvas){
     const mouseMove = Rx.Observable.fromEvent(canvas, 'mousemove')
     const spaceship = mouseMove
         .map(function(event){
             return {
-                x: event.clientX,
-                y: get('HERO_Y')
+                x: event.offsetX,
+                y: getCanvasHeight()
             }
         })
         .startWith({
             x: get('CANVAS_WIDTH') / 2,
-            y: get('HERO_Y')
+            y: getCanvasHeight()
         })
 
     return spaceship
@@ -83,15 +88,22 @@ function getScore(){
     return scoreSubject
 }
 
+function getResize(canvas){
+    return Rx.Observable
+        .fromEvent(canvas, 'resize')
+        .startWith(null)
+}
+
 function getGame(canvas, setGameOver){
     const score = getScore()
     const stars = getStarStream()
     const spaceship = getSpaceship(canvas)
     const enemies = getEnemies(canvas)
     const shots = getHeroShots(spaceship, getPlayerFiring(canvas))
+    const resize = getResize(canvas)
 
     const game = Rx.Observable.combineLatest(
-        stars, spaceship, enemies, shots,
+        stars, spaceship, enemies, shots, resize,
         function(stars, spaceship, enemies, shots ){
             return { stars, spaceship, enemies, shots, score }
         }
@@ -111,7 +123,7 @@ function renderScene(canvas, actors) {
     requestAnimationFrame(()=>paintStars(canvas, actors.stars))
     requestAnimationFrame(()=>paintSpaceship(canvas, actors.spaceship.x, actors.spaceship.y))
     requestAnimationFrame(()=>paintEnemies(canvas, actors.enemies))
-    requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots, actors.enemies, actors.score))
+    requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots, actors.enemies, actors.score, actors.resize))
     requestAnimationFrame(()=>paintScore(canvas, actors.score))
 }
 
@@ -186,7 +198,7 @@ function getHeroShots(spaceship, shot){
     }).scan((shotArray, shot) => {
         shotArray.push({
             x: shot.x,
-            y: get('HERO_Y')
+            y: getCanvasHeight()
         })
         return shotArray
     }, [])
