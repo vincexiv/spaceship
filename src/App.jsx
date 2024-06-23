@@ -10,19 +10,21 @@ function App(){
   const [ game, setGame ] = useState({started: false, completed: false, score: 0 })
 
   useEffect(() => {
-    setGameStarted()
-
-    const canvas = cRef?.current
-    canvas.width = get('CANVAS_WIDTH')
-    canvas.height = get('CANVAS_HEIGHT')
-
-    const { game, score } = getGame(canvas, updateGameState)
-
-    game.subscribe((actors)=>renderScene(canvas, actors))
-
-    score.subscribe(s => {
-      setGame(g => ({...g, score: g.score + s}))
-    })
+    if(!game.started){
+      const canvas = cRef?.current
+      canvas.width = get('CANVAS_WIDTH')
+      canvas.height = get('CANVAS_HEIGHT')
+  
+      const { game, score } = getGame(canvas, updateGameState)
+  
+      game.subscribe((actors)=>renderScene(canvas, actors))
+  
+      score.subscribe(s => {
+        setGame(g => ({...g, score: g.score + s}))
+      })
+  
+      setGameStarted()
+    }
 
   }, [record])
 
@@ -62,7 +64,7 @@ function App(){
           <div className='game-over'>
             <h1 className="title">Game Over</h1>
             <p><b>Your current score:</b> {game.score}</p>
-            <p><b>Best Best score:</b> {getRecordScore()}</p>
+            <p><b>Your Best score:</b> {getRecordScore()}</p>
             <button onClick={startNewGame}>Restart</button>
           </div>
         : 

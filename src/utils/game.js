@@ -30,7 +30,9 @@ function getStarStream(){
 function paintStars(canvas, stars) { 
     const ctx = canvas.getContext('2d')   
     stars.forEach(function(star) {
-            ctx.fillRect(star.x, star.y, star.size, star.size);
+            window.queueMicrotask(()=>{
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+            })
         });
 }
 
@@ -57,14 +59,16 @@ function getSpaceship(canvas){
 }
 
 function drawTriangle(canvas, x, y, width, color, direction){
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = color
-    ctx.beginPath()
-    ctx.moveTo(x - width, y)
-    ctx.lineTo(x, direction === 'up'? y - width : y + width)
-    ctx.lineTo(x + width, y)
-    ctx.lineTo(x - width, y)
-    ctx.fill()
+    window.queueMicrotask(() => {
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = color
+        ctx.beginPath()
+        ctx.moveTo(x - width, y)
+        ctx.lineTo(x, direction === 'up'? y - width : y + width)
+        ctx.lineTo(x + width, y)
+        ctx.lineTo(x - width, y)
+        ctx.fill()
+    })
 }
 
 function paintSpaceship(canvas, x, y){
@@ -110,7 +114,7 @@ function getGame(canvas, updateGameState){
     )
     .sample(get('SPEED'))
     .takeWhile(function(actors){
-        const gameCompleted = gameOver(actors.spaceship, actors.enemies) !== false
+        const gameCompleted = gameOver(actors.spaceship, actors.enemies) != false
         updateGameState({completed: gameCompleted})
         return !gameCompleted
     })
@@ -119,12 +123,14 @@ function getGame(canvas, updateGameState){
 }
 
 function renderScene(canvas, actors) {
-    requestAnimationFrame(()=>paintBackground(canvas))
-    requestAnimationFrame(()=>paintStars(canvas, actors.stars))
-    requestAnimationFrame(()=>paintSpaceship(canvas, actors.spaceship.x, actors.spaceship.y))
-    requestAnimationFrame(()=>paintEnemies(canvas, actors.enemies))
-    requestAnimationFrame(()=>paintHeroShots(canvas, actors.shots, actors.enemies, actors.score, actors.resize))
-    requestAnimationFrame(()=>paintScore(canvas, actors.score))
+    window.requestAnimationFrame(() => {
+        paintBackground(canvas)
+        paintStars(canvas, actors.stars)
+        paintSpaceship(canvas, actors.spaceship.x, actors.spaceship.y)
+        paintEnemies(canvas, actors.enemies)
+        paintHeroShots(canvas, actors.shots, actors.enemies, actors.score, actors.resize)
+        paintScore(canvas, actors.score)
+    })
 }
 
 function getEnemies(canvas){
