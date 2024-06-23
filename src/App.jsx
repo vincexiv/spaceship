@@ -28,6 +28,7 @@ function App(){
       setGameStarted()
     }
 
+    return () => localStorage.clear()
   }, [record])
 
   function setGameStarted(){
