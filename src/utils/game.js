@@ -135,6 +135,7 @@ function renderScene(canvas, actors) {
 
 function getEnemies(canvas){
     const enemies = Rx.Observable.interval(get('ENEMY_FREQ'))
+        .filter(() => !document.hidden)
         .scan((enemyArray, i)=> {
             const enemy = {
                 x: parseInt(Math.random() * get('CANVAS_WIDTH')),
