@@ -189,10 +189,10 @@ function getPlayerFiring(canvas){
     const click = Rx.Observable
         .fromEvent(canvas, 'click')
 
-    const dbClick = Rx.Observable
-        .fromEvent(canvas, 'dbclick')
+    const dblClick = Rx.Observable
+        .fromEvent(canvas, 'dblclick')
 
-    const firing = click.merge(dbClick)
+    const firing = click.merge(dblClick)
         .sample(get('FIRING_SPEED')).timestamp()
         .startWith({clientX: 0, clientY: -1})
 
