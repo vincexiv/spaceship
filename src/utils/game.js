@@ -145,7 +145,7 @@ function getEnemies(canvas){
             }
 
             Rx.Observable.interval(get('ENEMY_SHOOTING_FREQ')).subscribe(function(){
-                if(!enemy.isDead){
+                if(!enemy.isDead && Math.random() > 0.7){
                     enemy.shots.push({
                         x: enemy.x,
                         y: enemy.y
@@ -230,8 +230,10 @@ function paintHeroShots(canvas, heroShots, enemies, score) {
 }
 
 function isVisible(canvas, obj) {
-    return obj.x > -40 && obj.x < canvas.width + 40 &&
+    const objectInVisibleArea = obj.x > -40 && obj.x < canvas.width + 40 &&
     obj.y > -40 && obj.y < canvas.height + 40;
+
+    return objectInVisibleArea
 }
 
 function collision(target1, target2) {
