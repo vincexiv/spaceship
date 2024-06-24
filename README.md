@@ -7,4 +7,4 @@ A small shooting game made almost entirely using Reactive programming with RxJs
 - Mouse click to shoot
 - That's all. You're welcome
 
-[![Watch the video]](https://youtu.be/RsMoOq6nvxo)
+[Watch the video](https://youtu.be/RsMoOq6nvxo)
