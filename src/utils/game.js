@@ -36,10 +36,10 @@ function paintStars(canvas, stars) {
         });
 }
 
-function getHeight(){
+function getHeight(offset = 0.35){
     const { height: canvasHeight } = document.querySelector('#game-container').getBoundingClientRect()
     const y =  get('CANVAS_HEIGHT') * 0.5 // y is at the center of the view area vertically
-    return y + (0.35 * (canvasHeight || 0))
+    return y + (offset * (canvasHeight || 0))
 }
 
 function getSpaceship(canvas){
@@ -140,7 +140,7 @@ function getEnemies(canvas){
         .scan((enemyArray, i)=> {
             const enemy = {
                 x: parseInt(Math.random() * get('CANVAS_WIDTH')),
-                y: -30,
+                y: getHeight(-0.5) - 30, // Form the enemy just at the top of the visible area
                 shots: []
             }
 
