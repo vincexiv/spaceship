@@ -44,9 +44,9 @@ function getHeight(offset = 0.35){
 
 function getSpaceship(canvas){
     const mouseMove = Rx.Observable.fromEvent(canvas, 'mousemove')
-    const swipe = Rx.Observable.fromEvent(canvas, 'swipe')
+    const touchmove = Rx.Observable.fromEvent(canvas, 'touchmove')
 
-    const spaceship = mouseMove.merge(swipe)
+    const spaceship = mouseMove.merge(touchmove)
         .map(function(event){
             return {
                 x: event.offsetX,
