@@ -44,7 +44,9 @@ function getHeight(offset = 0.35){
 
 function getSpaceship(canvas){
     const mouseMove = Rx.Observable.fromEvent(canvas, 'mousemove')
-    const spaceship = mouseMove
+    const swipe = Rx.Observable.fromEvent(canvas, 'swipe')
+
+    const spaceship = mouseMove.merge(swipe)
         .map(function(event){
             return {
                 x: event.offsetX,
@@ -184,8 +186,13 @@ function paintEnemies(canvas, enemies){
 }
 
 function getPlayerFiring(canvas){    
-    const firing = Rx.Observable
+    const click = Rx.Observable
         .fromEvent(canvas, 'click')
+
+    const dbClick = Rx.Observable
+        .fromEvent(canvas, 'dbclick')
+
+    const firing = click.merge(dbClick)
         .sample(get('FIRING_SPEED')).timestamp()
         .startWith({clientX: 0, clientY: -1})
 
